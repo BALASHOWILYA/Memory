@@ -19,6 +19,11 @@ public class SceneController : MonoBehaviour
         //Положение первой карты; положение остальных карт отсчитывается от этой точки. 
         Vector3 startPos = originalCard.transform.position;
 
+        // Объявляем целочисленный массив с парами индентификаторов для всех четырех спрайтов с изображениями карт.
+        int[] numbers = { 0, 0, 1, 1, 2, 2, 3, 3 };
+        //Вызываем функцию, перемешивающую элементы массива 
+        numbers = ShuffleArray(numbers);
+
         //Вложенные цыклы, задающие как столбцы, как и строки сетки.
         for(int i=0; i < gridCols; i++)
         {
@@ -34,7 +39,8 @@ public class SceneController : MonoBehaviour
                     card = Instantiate(originalCard) as MemoryCard;
                 }
 
-                int id = Random.Range(0, images.Length);
+                int index = j * gridCols + i;
+                int id = numbers[index];
                 //Вызов открытого метода, добавленного в сценарий MemoryCard.
                 card.SetCard(id, images[id]);
 
@@ -47,4 +53,17 @@ public class SceneController : MonoBehaviour
       
     }
 
+    private int[] ShuffleArray(int[] numbers)
+    {
+        int[] newArray = numbers.Clone() as int[];
+        for (int i = 0; i < newArray.Length; i++)
+        {
+            int tmp = newArray[i];
+            int r = Random.Range(i, newArray.Length);
+            newArray[i] = newArray[r];
+            newArray[r] = tmp;
+
+        }
+        return newArray;
+    }
 }

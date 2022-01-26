@@ -6,15 +6,10 @@ public class MemoryCard : MonoBehaviour
     //Переменная, которая появляется  на панели Inspector.
     [SerializeField] private GameObject cardBack;
     [SerializeField] private SceneController controller;
-    //удалить
-    [SerializeField] private Sprite image;
+   
 
     private int _id;
-    //удалить
-    private void Start()
-    {
-        GetComponent<SpriteRenderer>().sprite = image;
-    }
+   
 
     // Добавленная функция чтения 
     public int id
