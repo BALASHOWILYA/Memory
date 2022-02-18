@@ -1,69 +1,99 @@
-using UnityEngine;
+п»їusing UnityEngine;
+using System.Collections;
+using UnityEngine.SceneManagement;
 
-public class SceneController : MonoBehaviour
-{
-    //Значение, указывающие количество ячеек сетки и их расстояние друг от друга 
-    public const int gridRows = 2;
-    public const int gridCols = 4;
-    public const float offsetX = 2f;
-    public const float offsetY = 2.5f;
+public class SceneController : MonoBehaviour {
+	public const int gridRows = 2;
+	public const int gridCols = 4;
+	public const float offsetX = 2f;
+	public const float offsetY = 2.5f;
 
-    //Ссылка для карты в сцене.
-    [SerializeField] private MemoryCard originalCard;
-    //Массив для ссылок на ресурсы-спрайты.
-    [SerializeField] private Sprite[] images;
+	[SerializeField] private MemoryCard originalCard;
+	[SerializeField] private Sprite[] images;
+	[SerializeField] private TextMesh scoreLabel;
+	
+	private MemoryCard _firstRevealed;
+	private MemoryCard _secondRevealed;
+	private int _score = 0;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        //Положение первой карты; положение остальных карт отсчитывается от этой точки. 
-        Vector3 startPos = originalCard.transform.position;
+	public bool canReveal {
+		get {return _secondRevealed == null;}
+	}
 
-        // Объявляем целочисленный массив с парами индентификаторов для всех четырех спрайтов с изображениями карт.
-        int[] numbers = { 0, 0, 1, 1, 2, 2, 3, 3 };
-        //Вызываем функцию, перемешивающую элементы массива 
-        numbers = ShuffleArray(numbers);
+	// Use this for initialization
+	void Start() {
+		Vector3 startPos = originalCard.transform.position;
 
-        //Вложенные цыклы, задающие как столбцы, как и строки сетки.
-        for(int i=0; i < gridCols; i++)
-        {
-            for(int j = 0; j < gridRows; j++)
-            {
-                //Ссылка на контейнер для исходной карты или ее копий.
-                MemoryCard card;
-                if(i==0 && j==0)
-                {
-                    card = originalCard;
-                } else
-                {
-                    card = Instantiate(originalCard) as MemoryCard;
-                }
+		// create shuffled list of cards
+		int[] numbers = {0, 0, 1, 1, 2, 2, 3, 3};
+		numbers = ShuffleArray(numbers);
 
-                int index = j * gridCols + i;
-                int id = numbers[index];
-                //Вызов открытого метода, добавленного в сценарий MemoryCard.
-                card.SetCard(id, images[id]);
+		// place cards in a grid
+		for (int i = 0; i < gridCols; i++) {
+			for (int j = 0; j < gridRows; j++) {
+				MemoryCard card;
 
-                float posX = (offsetX * i) + startPos.x;
-                float posY = -(offsetY * j) + startPos.y;
-                card.transform.position = new Vector3(posX, posY, startPos.z);
-            }
-        }
+				// use the original for the first grid space
+				if (i == 0 && j == 0) {
+					card = originalCard;
+				} else {
+					card = Instantiate(originalCard) as MemoryCard;
+				}
 
-      
-    }
+				// next card in the list for each grid space
+				int index = j * gridCols + i;
+				int id = numbers[index];
+				card.SetCard(id, images[id]);
 
-    private int[] ShuffleArray(int[] numbers)
-    {
-        int[] newArray = numbers.Clone() as int[];
-        for (int i = 0; i < newArray.Length; i++)
-        {
-            int tmp = newArray[i];
-            int r = Random.Range(i, newArray.Length);
-            newArray[i] = newArray[r];
-            newArray[r] = tmp;
+				float posX = (offsetX * i) + startPos.x;
+				float posY = -(offsetY * j) + startPos.y;
+				card.transform.position = new Vector3(posX, posY, startPos.z);
+			}
+		}
+	}
 
-        }
-        return newArray;
-    }
+	// Knuth shuffle algorithm
+	private int[] ShuffleArray(int[] numbers) {
+		int[] newArray = numbers.Clone() as int[];
+		for (int i = 0; i < newArray.Length; i++ ) {
+			int tmp = newArray[i];
+			int r = Random.Range(i, newArray.Length);
+			newArray[i] = newArray[r];
+			newArray[r] = tmp;
+		}
+		return newArray;
+	}
+
+	public void CardRevealed(MemoryCard card) {
+		if (_firstRevealed == null) {
+			_firstRevealed = card;
+		} else {
+			_secondRevealed = card;
+			StartCoroutine(CheckMatch());
+		}
+	}
+	
+	private IEnumerator CheckMatch() {
+
+		// increment score if the cards match
+		if (_firstRevealed.id == _secondRevealed.id) {
+			_score++;
+			scoreLabel.text = "Score: " + _score;
+		}
+
+		// otherwise turn them back over after .5s pause
+		else {
+			yield return new WaitForSeconds(.5f);
+
+			_firstRevealed.Unreveal();
+			_secondRevealed.Unreveal();
+		}
+		
+		_firstRevealed = null;
+		_secondRevealed = null;
+	}
+
+	public void Restart() {
+		SceneManager.LoadScene("Scene");
+	}
 }

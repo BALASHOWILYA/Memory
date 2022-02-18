@@ -1,40 +1,28 @@
-using UnityEngine;
+п»їusing UnityEngine;
+using System.Collections;
 
-public class MemoryCard : MonoBehaviour
-{
+public class MemoryCard : MonoBehaviour {
+	[SerializeField] private GameObject cardBack;
+	[SerializeField] private SceneController controller;
 
-    //Переменная, которая появляется  на панели Inspector.
-    [SerializeField] private GameObject cardBack;
-    [SerializeField] private SceneController controller;
-   
+	private int _id;
+	public int id {
+		get {return _id;}
+	}
 
-    private int _id;
-   
+	public void SetCard(int id, Sprite image) {
+		_id = id;
+		GetComponent<SpriteRenderer>().sprite = image;
+	}
 
-    // Добавленная функция чтения 
-    public int id
-    {
-        get { return _id; }
-    }
+	public void OnMouseDown() {
+		if (cardBack.activeSelf && controller.canReveal) {
+			cardBack.SetActive(false);
+			controller.CardRevealed(this);
+		}
+	}
 
-    //Открытый метод, которым могут пользоваться другие сценарии для передачи указанному объекту новых спрайтов.
-    public void SetCard(int id, Sprite image)
-    {
-        _id = id;
-        // Сопоставляем спрайт компоненту SpriteRenderer. 
-       cardBack.GetComponent<SpriteRenderer>().sprite = image;
-    }
-
-    //Это функция вызывается после щелчка на объекте.
-    public void OnMouseDown()
-    {
-
-        //Код деактивации  запускается только в случае, когда объект активен/виден.
-        if (cardBack.activeSelf)
-        {
-            //Делает объект неактивным/невидимым 
-            cardBack.SetActive(false);
-        }
-       
-    }
+	public void Unreveal() {
+		cardBack.SetActive(true);
+	}
 }
